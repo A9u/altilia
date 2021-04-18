@@ -7,6 +7,8 @@ func main() {
 	fmt.Println("----------Welcome to Altilia----------")
 	fmt.Println()
 	fmt.Println("Checking Battery status")
-	fmt.Println("")
-	device.GetPower()
+	fmt.Println(device.GetPower())
+	fmt.Println()
+	fmt.Println("Notifying")
+	device.Notify()
 }
