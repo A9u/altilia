@@ -86,7 +86,8 @@ func isCharging(status string) bool {
 
 func isGte95(percent string) bool {
 	pct, err := strconv.Atoi(strings.Split(percent, "%")[0])
-	if err != nil {
+
+	if err == nil {
 		return pct >= 95
 	}
 

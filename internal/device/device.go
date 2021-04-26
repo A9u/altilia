@@ -46,7 +46,7 @@ func CompletedNotifyAndRerun() {
 }
 
 func SleepAndRerun(d time.Duration) {
-	fmt.Println("Going to Sleep")
+	fmt.Printf("Going to Sleep for %v seconds", d.Seconds())
 	time.Sleep(d)
 	fmt.Println("Woke up")
 	go AmICharged()
