@@ -14,6 +14,8 @@ import (
 
 const POWER_REGEX = `[\d]{1,3}%;\s[\S]+[\s(\S)+]*;`
 
+var regex = regexp.MustCompile(POWER_REGEX)
+
 func GetPower() string {
 	cmd := exec.Command("pmset", "-g", "ps")
 
@@ -28,8 +30,6 @@ func GetPower() string {
 }
 
 func CheckPower() {
-	regex := regexp.MustCompile(POWER_REGEX)
-
 	powerBytes := regex.Find([]byte(GetPower()))
 
 	power := fmt.Sprintf("%s", powerBytes)
@@ -38,8 +38,6 @@ func CheckPower() {
 }
 
 func PowerStats(statsStr string) (percent string, status string) {
-	regex := regexp.MustCompile(POWER_REGEX)
-
 	powerBytes := regex.Find([]byte(statsStr))
 
 	powerStats := fmt.Sprintf("%s", powerBytes)
