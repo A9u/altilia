@@ -14,7 +14,7 @@ func AmICharged() {
 
 	if isCharged(status) {
 		if is100Percent(percent) {
-			go CompletedNotifyAndRerun()
+			CompletedNotifyAndRerun()
 			return
 		} else {
 			go SleepAndRerun(30 * time.Second)
@@ -46,7 +46,7 @@ func CompletedNotifyAndRerun() {
 }
 
 func SleepAndRerun(d time.Duration) {
-	fmt.Printf("Going to Sleep for %v seconds", d.Seconds())
+	fmt.Printf("Going to Sleep for %v seconds\n", d.Seconds())
 	time.Sleep(d)
 	fmt.Println("Woke up")
 	go AmICharged()
