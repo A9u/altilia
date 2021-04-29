@@ -37,7 +37,7 @@ func CheckPower() {
 	Notify(power)
 }
 
-func PowerStats(statsStr string) (string, string) {
+func PowerStats(statsStr string) (percent string, status string) {
 	regex := regexp.MustCompile(POWER_REGEX)
 
 	powerBytes := regex.Find([]byte(statsStr))
@@ -46,8 +46,8 @@ func PowerStats(statsStr string) (string, string) {
 
 	stats := strings.Split(powerStats, ";")
 
-	percent := strings.Trim(stats[0], " ")
-	status := strings.Trim(stats[1], " ")
+	percent = strings.Trim(stats[0], " ")
+	status = strings.Trim(stats[1], " ")
 
 	return percent, status
 }
@@ -87,9 +87,9 @@ func isCharging(status string) bool {
 func isGte95(percent string) bool {
 	pct, err := strconv.Atoi(strings.Split(percent, "%")[0])
 
-	if err == nil {
-		return pct >= 95
+	if err != nil {
+		return false
 	}
 
-	return false
+	return pct >= 95
 }
