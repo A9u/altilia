@@ -5,6 +5,7 @@ package device
 import (
 	"bytes"
 	"fmt"
+	"github.com/A9u/urja"
 	"log"
 	"os/exec"
 	"regexp"
@@ -16,17 +17,19 @@ const POWER_REGEX = `[\d]{1,3}%;\s[\S]+[\s(\S)+]*;`
 
 var regex = regexp.MustCompile(POWER_REGEX)
 
-func GetPower() string {
-	cmd := exec.Command("pmset", "-g", "ps")
+const (
+	FullyCharged  = "charged"
+	NearlyCharged = "finishing charge"
+	Charging      = "charging"
+)
 
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
+func GetPower() string {
+	output, err := urja.GetBatteryStatus()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return out.String()
+	return output
 }
 
 func CheckPower() {
@@ -66,20 +69,8 @@ func Notify(message string) {
 
 // utils
 
-func isCharged(status string) bool {
-	return strings.EqualFold(status, "charged")
-}
-
 func is100Percent(percent string) bool {
 	return strings.EqualFold(percent, "100%")
-}
-
-func isFinishingCharge(status string) bool {
-	return strings.EqualFold(status, "finishing charge")
-}
-
-func isCharging(status string) bool {
-	return strings.EqualFold(status, "charging")
 }
 
 func isGte95(percent string) bool {

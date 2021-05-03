@@ -12,29 +12,30 @@ func AmICharged() {
 
 	percent, status := PowerStats(powerStatus)
 
-	if isCharged(status) {
+	var duration time.Duration
+
+	switch status {
+	case FullyCharged:
 		if is100Percent(percent) {
 			CompletedNotifyAndRerun()
-			return
+			duration = 8 * time.Hour
 		} else {
-			go SleepAndRerun(30 * time.Second)
-			return
+			duration = 30 * time.Second
 		}
-	}
 
-	if isFinishingCharge(status) {
-		go SleepAndRerun(30 * time.Second)
-		return
-	}
+	case NearlyCharged:
+		duration = 30 * time.Second
 
-	if isCharging(status) {
+	case Charging:
 		if isGte95(percent) {
-			go SleepAndRerun(2 * time.Minute)
-			return
+			duration = 2 * time.Minute
 		}
+
+	default:
+		duration = 10 * time.Minute
 	}
 
-	go SleepAndRerun(10 * time.Minute)
+	go SleepAndRerun(duration)
 	return
 }
 
@@ -42,7 +43,6 @@ func CompletedNotifyAndRerun() {
 	Notify("Charging is complete! You may now unplug the charger.")
 	time.Sleep(60 * time.Second)
 	Notify("Hope you have removed the charger!")
-	SleepAndRerun(8 * time.Hour)
 }
 
 func SleepAndRerun(d time.Duration) {
