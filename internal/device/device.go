@@ -12,7 +12,7 @@ func AmICharged() {
 
 	percent, status := PowerStats(powerStatus)
 
-	var duration time.Duration
+	var duration = 10 * time.Minute
 
 	switch status {
 	case FullyCharged:
