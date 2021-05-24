@@ -8,14 +8,9 @@ import (
 	"github.com/A9u/urja"
 	"log"
 	"os/exec"
-	"regexp"
 	"strconv"
 	"strings"
 )
-
-const POWER_REGEX = `[\d]{1,3}%;\s[\S]+[\s(\S)+]*;`
-
-var regex = regexp.MustCompile(POWER_REGEX)
 
 const (
 	FullyCharged  = "charged"
@@ -33,28 +28,31 @@ func GetPower() string {
 }
 
 func CheckPower() {
-	powerBytes := regex.Find([]byte(GetPower()))
+	stats := getStatInfo(GetPower())
+	powerStats := getPowerStats(stats)
 
-	power := fmt.Sprintf("%s", powerBytes)
-
-	Notify(power)
+	Notify(strings.Join(powerStats[0:2], " "))
 }
 
-func PowerStats(statsStr string) (percent string, status string) {
-	powerBytes := regex.Find([]byte(statsStr))
+func PowerStats(statsStr string) (percent int, status string) {
+	stats := getStatInfo(statsStr)
+	powerStats := getPowerStats(stats)
 
-	powerStats := fmt.Sprintf("%s", powerBytes)
+	status = strings.TrimSpace(powerStats[1])
 
-	stats := strings.Split(powerStats, ";")
+	percentStr := strings.TrimSpace(powerStats[0])
+	percentStr = strings.Split(percentStr, "%")[0]
 
-	percent = strings.Trim(stats[0], " ")
-	status = strings.Trim(stats[1], " ")
+	percent, err := strconv.Atoi(percentStr)
+	if err != nil {
+		return 0, status
+	}
 
 	return percent, status
 }
 
 func Notify(message string) {
-	powerCmd := fmt.Sprintf(`display notification %q with title "Power"`, message)
+	powerCmd := fmt.Sprintf(`display notification %q with title "Power 🔋"`, message)
 	cmd := exec.Command("osascript", "-e", powerCmd)
 
 	var cmdError bytes.Buffer
@@ -69,16 +67,22 @@ func Notify(message string) {
 
 // utils
 
-func is100Percent(percent string) bool {
-	return strings.EqualFold(percent, "100%")
+func is100Percent(percent int) bool {
+	return percent == 100
 }
 
-func isGte95(percent string) bool {
-	pct, err := strconv.Atoi(strings.Split(percent, "%")[0])
+func isGte95(percent int) bool {
+	return percent >= 95
+}
 
-	if err != nil {
-		return false
-	}
+func isClosingBracket(r rune) bool {
+	return r == ')'
+}
 
-	return pct >= 95
+func getStatInfo(statsStr string) (stats string) {
+	return strings.FieldsFunc(statsStr, isClosingBracket)[1]
+}
+
+func getPowerStats(statsInfo string) []string {
+	return strings.Split(statsInfo, ";")
 }
