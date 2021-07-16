@@ -5,34 +5,54 @@ package device
 import (
 	"bytes"
 	"fmt"
+	"github.com/A9u/urja"
 	"log"
 	"os/exec"
-	"regexp"
+	"strconv"
+	"strings"
 )
 
-const POWER_REGEX = `[\d]{1,2}%`
+const (
+	FullyCharged  = "charged"
+	NearlyCharged = "finishing charge"
+	Charging      = "charging"
+)
 
 func GetPower() string {
-	cmd := exec.Command("pmset", "-g", "ps")
-
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
+	output, err := urja.GetBatteryStatus()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return out.String()
+	return output
 }
 
-func Notify() {
-	regex := regexp.MustCompile(POWER_REGEX)
+func CheckPower() {
+	stats := getStatInfo(GetPower())
+	powerStats := getPowerStats(stats)
 
-	powerBytes := regex.Find([]byte(GetPower()))
+	Notify(strings.Join(powerStats[0:2], " "))
+}
 
-	power := fmt.Sprintf("%s is remaining", powerBytes)
+func PowerStats(statsStr string) (percent int, status string) {
+	stats := getStatInfo(statsStr)
+	powerStats := getPowerStats(stats)
 
-	powerCmd := fmt.Sprintf(`display notification %q with title "Power"`, power)
+	status = strings.TrimSpace(powerStats[1])
+
+	percentStr := strings.TrimSpace(powerStats[0])
+	percentStr = strings.Split(percentStr, "%")[0]
+
+	percent, err := strconv.Atoi(percentStr)
+	if err != nil {
+		return 0, status
+	}
+
+	return percent, status
+}
+
+func Notify(message string) {
+	powerCmd := fmt.Sprintf(`display notification %q with title "Power 🔋"`, message)
 	cmd := exec.Command("osascript", "-e", powerCmd)
 
 	var cmdError bytes.Buffer
@@ -43,4 +63,26 @@ func Notify() {
 		fmt.Println("Error received::", cmdError.String())
 		log.Fatal(err)
 	}
+}
+
+// utils
+
+func is100Percent(percent int) bool {
+	return percent == 100
+}
+
+func isGte95(percent int) bool {
+	return percent >= 95
+}
+
+func isClosingBracket(r rune) bool {
+	return r == ')'
+}
+
+func getStatInfo(statsStr string) (stats string) {
+	return strings.FieldsFunc(statsStr, isClosingBracket)[1]
+}
+
+func getPowerStats(statsInfo string) []string {
+	return strings.Split(statsInfo, ";")
 }
